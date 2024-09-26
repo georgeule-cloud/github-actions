@@ -24,36 +24,32 @@ jobs:
       # - name: Run tests (if you have tests)
       #   run: npm test
 
-      - name: Deploy to Windows Server using WinRM
-        shell: pwsh
-        run: |
-          $server = '${{ secrets.SERVER_IP }}'
-          $user = '${{ secrets.SERVER_USER }}'
-          $pass = '${{ secrets.SERVER_PASS }}'
+- name: Deploy to Windows Server using WinRM
+  shell: pwsh
+  run: |
+    $server = '${{ secrets.SERVER_IP }}'
+    $user = '${{ secrets.SERVER_USER }}'
+    $pass = '${{ secrets.SERVER_PASS }}'
 
-          # Crear una contraseña segura
-          $securePass = ConvertTo-SecureString $pass -AsPlainText -Force
+    $securePass = ConvertTo-SecureString $pass -AsPlainText -Force
+    $cred = New-Object System.Management.Automation.PSCredential($user, $securePass)
 
-          # Crear una credencial
-          $cred = New-Object System.Management.Automation.PSCredential($user, $securePass)
+    # Conexión usando WinRM
+    $session = New-PSSession -ComputerName $server -Credential $cred -Authentication Basic -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck)
+    
+    # Verifica la conexión
+    if ($session) {
+      Write-Host "Conexión exitosa a $server"
+    } else {
+      Write-Host "Conexión fallida"
+    }
 
-          # Establecer una sesión de PowerShell remota usando WinRM
-          $session = New-PSSession -ComputerName $server -Credential $cred -Authentication Basic -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck)
+    # Ejecutar comandos remotos
+    Invoke-Command -Session $session -ScriptBlock {
+      cd C:\IIsSites\github-actions
+      git pull origin main
+      npm install
+      pm2 restart all
+    }
 
-          # Comandos remotos a ejecutar en el servidor
-          Invoke-Command -Session $session -ScriptBlock {
-            # Ruta del proyecto en el servidor
-            cd C:\IIsSites\github-actions
-
-            # Actualiza el repositorio
-            git pull origin main
-
-            # Instala dependencias
-            npm install
-
-            # Reinicia la app (asume que usas pm2 o un sistema de gestión de procesos)
-            pm2 restart all
-          }
-
-          # Cerrar la sesión remota
-          Remove-PSSession -Session $session
+    Remove-PSSession -Session $session
