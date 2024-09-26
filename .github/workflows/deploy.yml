@@ -21,22 +21,39 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Run tests (if you have tests)
-      #   run: npm test
+      - name: Run tests (if you have tests)
+        run: npm test
 
-      - name: Deploy to Windows Server
+      - name: Deploy to Windows Server using WinRM
+        shell: pwsh
         run: |
           $server = '${{ secrets.SERVER_IP }}'
           $user = '${{ secrets.SERVER_USER }}'
           $pass = '${{ secrets.SERVER_PASS }}'
-          $cred = New-Object System.Management.Automation.PSCredential ($user, (ConvertTo-SecureString $pass -AsPlainText -Force))
-          Invoke-Command -ComputerName $server -Credential $cred -ScriptBlock {
-            # Ruta del proyecto en tu servidor
+
+          # Crear una contraseña segura
+          $securePass = ConvertTo-SecureString $pass -AsPlainText -Force
+
+          # Crear una credencial
+          $cred = New-Object System.Management.Automation.PSCredential($user, $securePass)
+
+          # Establecer una sesión de PowerShell remota usando WinRM
+          $session = New-PSSession -ComputerName $server -Credential $cred -Authentication Basic -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck)
+
+          # Comandos remotos a ejecutar en el servidor
+          Invoke-Command -Session $session -ScriptBlock {
+            # Ruta del proyecto en el servidor
             cd C:\IIsSites\github-actions
-            # Clona el repo
+            
+            # Actualiza el repositorio
             git pull origin main
+
             # Instala dependencias
             npm install
-            # Reinicia la app (asume que usas pm2 o un proceso similar)
+
+            # Reinicia la app (asume que usas pm2 o un sistema de gestión de procesos)
             pm2 restart all
           }
+
+          # Cerrar la sesión remota
+          Remove-PSSession -Session $session
