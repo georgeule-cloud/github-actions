@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests (if you have tests)
+        run: npm test
+
+      - name: Deploy to Windows Server
+        run: |
+          $server = '${{ secrets.SERVER_IP }}'
+          $user = '${{ secrets.SERVER_USER }}'
+          $pass = '${{ secrets.SERVER_PASS }}'
+          $cred = New-Object System.Management.Automation.PSCredential ($user, (ConvertTo-SecureString $pass -AsPlainText -Force))
+          Invoke-Command -ComputerName $server -Credential $cred -ScriptBlock {
+            # Ruta del proyecto en tu servidor
+            cd C:\IIsSites\github-actions
+            # Clona el repo
+            git pull origin main
+            # Instala dependencias
+            npm install
+            # Reinicia la app (asume que usas pm2 o un proceso similar)
+            pm2 restart all
+          }
