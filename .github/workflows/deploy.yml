@@ -21,34 +21,37 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Puedes descomentar esta sección si tienes pruebas configuradas
       # - name: Run tests (if you have tests)
       #   run: npm test
 
-- name: Deploy to Windows Server using WinRM
-  shell: pwsh
-  run: |
-    $server = '${{ secrets.SERVER_IP }}'
-    $user = '${{ secrets.SERVER_USER }}'
-    $pass = '${{ secrets.SERVER_PASS }}'
+      - name: Deploy to Windows Server using WinRM
+        shell: pwsh
+        run: |
+          $server = '${{ secrets.SERVER_IP }}'
+          $user = '${{ secrets.SERVER_USER }}'
+          $pass = '${{ secrets.SERVER_PASS }}'
 
-    $securePass = ConvertTo-SecureString $pass -AsPlainText -Force
-    $cred = New-Object System.Management.Automation.PSCredential($user, $securePass)
+          $securePass = ConvertTo-SecureString $pass -AsPlainText -Force
+          $cred = New-Object System.Management.Automation.PSCredential($user, $securePass)
 
-    # Conexión usando WinRM
-    $session = New-PSSession -ComputerName $server -Credential $cred -Authentication Basic -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck)
-    
-    # Verifica la conexión
-    if ($session) {
-      Write-Host "Conexión exitosa a $server"
-    } else {
-      Write-Host "Conexión fallida"
-    }
-    # Ejecutar comandos remotos
-    Invoke-Command -Session $session -ScriptBlock {
-      cd C:\IIsSites\github-actions
-      git pull origin main
-      npm install
-      pm2 restart all
-    }
+          # Conexión usando WinRM
+          $session = New-PSSession -ComputerName $server -Credential $cred -Authentication Basic -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck)
 
-    Remove-PSSession -Session $session
+          # Verifica la conexión
+          if ($session) {
+            Write-Host "Conexión exitosa a $server"
+          } else {
+            Write-Host "Conexión fallida"
+          }
+
+          # Ejecutar comandos remotos
+          Invoke-Command -Session $session -ScriptBlock {
+            cd C:\IIsSites\github-actions
+            git pull origin main
+            npm install
+            pm2 restart all
+          }
+
+          # Cerrar sesión remota
+          Remove-PSSession -Session $session
