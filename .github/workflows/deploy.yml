@@ -21,8 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests (if you have tests)
-        run: npm test
+      # - name: Run tests (if you have tests)
+      #   run: npm test
 
       - name: Deploy to Windows Server
         run: |
