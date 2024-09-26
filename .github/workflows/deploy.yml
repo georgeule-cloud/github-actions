@@ -43,7 +43,6 @@ jobs:
     } else {
       Write-Host "Conexión fallida"
     }
-
     # Ejecutar comandos remotos
     Invoke-Command -Session $session -ScriptBlock {
       cd C:\IIsSites\github-actions
