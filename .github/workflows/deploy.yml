@@ -21,18 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Prepare artifacts
-        run: |
-          # Create a temporary directory for deployment
-          mkdir -p deploy
-          # Copy necessary files to the deploy directory
-          cp index.js deploy/
-          cp package.json deploy/
-          cp package-lock.json deploy/
-
-
-      - name: List files in deploy directory
-        run: ls -la deploy/
+      - name: List files to deploy
+        run: ls -la  # List files in the current directory to ensure everything is present
 
       - name: Deploy to Windows Server using SCP
         uses: appleboy/scp-action@master
@@ -40,11 +30,16 @@ jobs:
           host: ${{ secrets.SERVER_IP }}       # Server IP
           username: ${{ secrets.SERVER_USER }}   # Username
           password: ${{ secrets.SERVER_PASS }}   # Password
-          source: "deploy/*"  # Use the temporary directory created for deployment
+          source: "index.js package.json package-lock.json"  # List the files to copy directly
           target: "C:/IIsSites/github-actions/"    # Target path on the Windows server
           port: 22  # Specify port if necessary (default is 22)
 
       - name: Install dependencies on server
-        run: |
-          sshpass -p "${{ secrets.SERVER_PASS }}" ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd C:/IIsSites/github-actions && npm install"
-
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}       # Server IP
+          username: ${{ secrets.SERVER_USER }}   # Username
+          password: ${{ secrets.SERVER_PASS }}   # Password
+          script: |
+            cd C:/IIsSites/github-actions
+            npm install
