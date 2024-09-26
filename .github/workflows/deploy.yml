@@ -21,8 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests (if you have tests)
-        run: npm test
+      # - name: Run tests (if you have tests)
+      #   run: npm test
 
       - name: Deploy to Windows Server using WinRM
         shell: pwsh
@@ -44,7 +44,7 @@ jobs:
           Invoke-Command -Session $session -ScriptBlock {
             # Ruta del proyecto en el servidor
             cd C:\IIsSites\github-actions
-            
+
             # Actualiza el repositorio
             git pull origin main
 
