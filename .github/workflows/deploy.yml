@@ -40,9 +40,9 @@ jobs:
           host: ${{ secrets.SERVER_IP }}       # Server IP
           username: ${{ secrets.SERVER_USER }}   # Username
           password: ${{ secrets.SERVER_PASS }}   # Password
-          source: "deploy/*"  # Use the temporary directory created for deployment
-          target: "C:/IIsSites/github-actions/"    # Target path on the Windows server
-          port: 22  # Specify port if necessary (default is 22)
+          source: "deploy/."  # Contents inside the deploy temp folder
+          target: "C:/IIsSites/github-actions/"    # Target path 
+          port: 22 
 
       - name: Install dependencies on server
         run: |
