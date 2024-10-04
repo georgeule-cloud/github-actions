@@ -6,6 +6,6 @@ app.get('/', (req, res) => {
   res.send('Ping! Pong! 🏓🏓');
 });
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
+app.listen(port, '127.0.0.1', () => {
+  console.log('Server running on port 3000');
 });
